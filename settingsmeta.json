@@ -1,0 +1,34 @@
+{
+    "skillMetadata": {
+	"sections": [
+	    {
+		"name": "Login Information",
+		"fields": [
+		    {
+			"type": "label",
+			"label": "Provide the login information provided by your calendar service provider."
+		    },
+		    {
+			"name": "user",
+			"type": "text",
+			"label": "Username",
+			"value": "",
+			"placeholder": "CalDAV username"
+		    },
+		    {
+			"name": "password",
+			"type": "password",
+			"label": "Password",
+			"value": ""
+		    },
+		    {
+			"name": "url",
+			"type": "text",
+			"label": "URL",
+			"value": ""
+		    }
+		]
+	    }
+	]
+    }
+}
