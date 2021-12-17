@@ -1,7 +1,7 @@
 # Skill Name: my-calendar
 # Author: Dan Arguello
 # email: gDan@posteo.net
-# Date created: 11/26/2021
+# Date created: 12/16/2021
 # Date last modified: 12/11/2021
 # Python Version: 3.8.10
 # Github repository: https://github.com/dan8745/my-calendar
@@ -26,6 +26,7 @@ class MyCalendar(MycroftSkill):
         self.user = None
         self.password = None
         self.url = None
+        self.credentials_set = False
 
         self.calendars = None
                 
@@ -44,6 +45,7 @@ class MyCalendar(MycroftSkill):
         self.user = None
         self.password = None
         self.url = None
+        self.credentials_set = False
 
         
     def initialize(self):
@@ -107,6 +109,7 @@ class MyCalendar(MycroftSkill):
         
         else:
             self.log.info('Collected CalDAV credentials')
+            self.credentials_set = True
 
 
             
@@ -114,22 +117,20 @@ class MyCalendar(MycroftSkill):
         ''' Retrieve calendar object data from CalDAV server and store
         in self.calendars '''
         
-        if not (self.user, self.password, self.url):
-            self.get_credentials()
-            
-        client = caldav.DAVClient(url=self.url, \
-                                  username=self.user, \
-                                  password=self.password)
-        try:
-            my_principal = client.principal() # Connect to CalDAV server
-            self.calendars = my_principal.calendars()
-        except:
-            self.log.exception('Failed to retrieve data from CalDAV server')
-            self.speak('i could not retrieve your calendar data')
-            self.speak('this could be an issue with your credentials')
-            self.speak('please check your settings at mycroft dot a i')
+        if self.credentials_set:
+            client = caldav.DAVClient(url=self.url, \
+                                      username=self.user, \
+                                      password=self.password)
+            try:
+                my_principal = client.principal() # Connect to CalDAV server
+                self.calendars = my_principal.calendars()
+            except:
+                self.log.exception('Failed to retrieve data from CalDAV server')
+                self.speak('i could not retrieve your calendar data')
+                self.speak('this may be an issue with your log in credentials')
+                self.speak('please check your settings at mycroft dot aee i')
 
-            self.calendars = None
+                self.calendars = None
 
 
 
@@ -172,29 +173,30 @@ class MyCalendar(MycroftSkill):
 
         '''
 
-        self.speak_dialog('calendar.my')
+
 
         start_date, rest = extract_datetime(message.data.get('utterance', ''),
                                     datetime.today())
-        start_date = start_date.date() # Remove the time stamp
-
-
+        start_date = start_date.date() # Remove the time; keep the date
         end_date = start_date + timedelta(days=1)
-        self.log.info('start_date = ' + str(start_date))
-        self.log.info('end_date = ' + str(end_date))
-
 
         when = message.data.get('when')
         if when in self.day_num.keys():
             when = 'on ' + when
 
-
         events = self.get_events(start_date, end_date)
 
-        response = 'i see you have {} events {}. '.format(len(events), when)
-        for event in events:
-            response = response + str(event['summary']).lower() + '. '
-
+        if events is not None:
+            self.speak_dialog('calendar.my')
+            response = 'i see you have {} events {}. '.format(len(events), when)
+            for event in events:
+                response = response + str(event['summary']).lower() + '. '
+        else:
+            if self.calendars is not None:
+                response = 'there are no events on your calendar {}. '.format(when)
+            else:
+                response = 'i was not able to retrieve your calendars'
+        
 
         self.speak(response)
 
