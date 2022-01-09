@@ -188,9 +188,8 @@ class MyCalendar(MycroftSkill):
         if len(events) > 0:
             self.speak_dialog('calendar.my')
             response = f'i see you have {len(events)} events {when}. '
-            for event in self.events:
-                if event['dtstart'] < start_date and event['dtend'] < end_date:
-                    response += event['summary'].value.lower() + '. '
+            for event in events:
+                response += event['summary'].value.lower() + '. '
         else:
             response = f'there are no events on your calendar {when}. '
         
