@@ -11,7 +11,6 @@ from mycroft import MycroftSkill, intent_file_handler
 from lingua_franca.parse import extract_datetime, normalize
 from datetime import date, datetime, timedelta
 import caldav
-import pickle
 
 
 
@@ -31,11 +30,7 @@ class MyCalendar(MycroftSkill):
 
         self.calendars = list()
 
-                
-        self.day_num = {'monday': 0, 'tuesday': 1, 'wednesday': 2,
-                        'thursday': 3, 'friday': 4, 'saturday': 5,
-                        'sunday': 6}
-
+        
 
     def reset_credentials(self):
         ''' Set CalDAV login credentials to None.
@@ -97,18 +92,15 @@ class MyCalendar(MycroftSkill):
                 self.credentials_set = True
 
         except:
-            self.log.exception('Failed to properly retrieve CalDAV credentials')
-            self.speak('i could not retrieve your calendar credentials')
-            self.speak('i will not be able to update your calendar')
-            self.speak('this could be a problem with your internet connection.')
+            self.log.exception('Failed to retrieve CalDAV credentials')
+            self.speak_dialog('credential.retrieval.failed')
 
             self.reset_credentials()
 
         if not self.credentials_set:
             self.log.info('CalDAV credentials seem to be missing')
             self.log.info('Check your settings at account.mycroft.ai')
-            self.speak('some of your cal dav credentials are missing')
-            self.speak('please check your settings at mycroft dot a i')
+            self.speak_dialog('credentials.missing')
             
             self.reset_credentials()
         
@@ -130,9 +122,7 @@ class MyCalendar(MycroftSkill):
                 self.calendars = my_principal.calendars()
             except:
                 self.log.exception('Failed to retrieve data from CalDAV server')
-                self.speak('i could not retrieve your calendar data')
-                self.speak('this may be an issue with your log in credentials')
-                self.speak('please check your settings at mycroft dot aee i')
+                self.speak_dialog('data.retrieval.failure')
 
                 self.calendars = None
 
@@ -179,23 +169,28 @@ class MyCalendar(MycroftSkill):
         start_date = start_date.date() # Remove the time; keep the date
         end_date = start_date + timedelta(days=1)
 
-        when = message.data.get('when') # I don't like this
-        if when in self.day_num.keys(): # block of code
-            when = 'on ' + when         # here.
+        
+        when = message.data.get('when')
+        days = ['monday', 'tuesday', 'wednesday', 'thursday',
+               'friday', 'saturday', 'sunday']
+        if when in days: # TODO: Recode this to be multilingual.
+            when = f'on {when}'
 
         events = self.get_events(start_date, end_date)
+        num_events = len(events)
 
-        if len(events) > 0:
+        if num_events > 0:
             self.speak_dialog('calendar.my')
-            response = f'i see you have {len(events)} events {when}. '
+            self.speak_dialog('num.events.when',
+                              {'when': when,
+                               'num_events': num_events})
+
             for event in events:
-                response += event['summary'].value.lower() + '. '
+                self.speak(f"{event['summary'].value.lower()}.")
+            
         else:
-            response = f'there are no events on your calendar {when}. '
+            self.speak_dialog('no.events.when', {'when': when})
         
-
-        self.speak(response)
-
         
 
 def create_skill():
