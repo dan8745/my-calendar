@@ -2,7 +2,7 @@
 # Author: Dan Arguello
 # email: gDan@posteo.net
 # Date created: 12/11/2021
-# Date last modified: 12/16/2021
+# Date last modified: 1/12/2022
 # Python Version: 3.8.10
 # Github repository: https://github.com/dan8745/my-calendar
 # License: GNU GENERAL PUBLIC LICENSE, Version 3, 29 June 2007
